@@ -1,3 +1,5 @@
+import secrets
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -5,6 +7,14 @@ class Settings(BaseSettings):
     """Configuration settings for the application."""
 
     environment: str
+
+    access_time_days: int = 7
+    refresh_time_days: int = 30
+
+    secret_key_access: str = secrets.token_hex(32)
+    secret_key_refresh: str = secrets.token_hex(32)
+    jwt_signing_algorithm: str = "HS256"
+
 
     postgres_port: int
     postgres_user: str
