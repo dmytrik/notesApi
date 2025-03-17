@@ -6,6 +6,7 @@ from sqlalchemy.orm import (
 )
 
 from core.database import BaseModel
+from src.notes.models import NoteModel
 from core.utils import hash_password
 from src.auth.validators import validate_password_strength
 
