@@ -2,11 +2,12 @@ from sqlalchemy import Integer, String
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
+    relationship,
 )
 
-from backend.core.database import BaseModel
-from backend.core.utils import hash_password
-from backend.src.auth.validators import validate_password_strength
+from core.database import BaseModel
+from core.utils import hash_password
+from src.auth.validators import validate_password_strength
 
 
 class UserModel(BaseModel):
@@ -22,6 +23,8 @@ class UserModel(BaseModel):
         "hashed_password", String(255), nullable=False
     )
 
+    notes: Mapped[list["NoteModel"]] = relationship("NoteModel", back_populates="user")
+
     @property
     def password(self) -> None:
         raise AttributeError(
@@ -32,3 +35,6 @@ class UserModel(BaseModel):
     def password(self, raw_password: str) -> None:
         validate_password_strength(raw_password)
         self._hashed_password = hash_password(raw_password)
+
+    def __repr__(self) -> str:
+        return f"<User {self.email}>"
