@@ -17,10 +17,13 @@ from src.auth.schemas import (
     UserRegistrationResponseSchema,
     UserLoginRequestSchema,
     UserLoginResponseSchema,
+    TokenRefreshRequestSchema,
+    TokenRefreshResponseSchema
 )
 from src.auth.models import UserModel, RefreshTokenModel
 from security.interfaces import JWTAuthManagerInterface
 from security.jwt_manager import get_jwt_auth_manager
+from security.exceptions import BaseSecurityError
 
 
 router = APIRouter()
@@ -165,4 +168,80 @@ async def login_user(
         )
 
 
+@router.post(
+    "/refresh/",
+    response_model=TokenRefreshResponseSchema,
+    summary="Refresh Access Token",
+    description="Refresh the access token using a valid refresh token.",
+    status_code=status.HTTP_200_OK,
+    responses={
+        400: {
+            "description": "Bad Request - The provided refresh token is invalid or expired.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Token has expired."
+                    }
+                }
+            },
+        },
+        401: {
+            "description": "Unauthorized - Refresh token not found.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "Refresh token not found."
+                    }
+                }
+            },
+        },
+        404: {
+            "description": "Not Found - The user associated with the token does not exist.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "User not found."
+                    }
+                }
+            },
+        },
+    },
+)
+async def refresh_access_token(
+        token_data: TokenRefreshRequestSchema,
+        db: AsyncSession = Depends(get_db),
+        jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
+) -> TokenRefreshResponseSchema:
 
+    try:
+        decoded_token = jwt_manager.decode_refresh_token(token_data.refresh_token)
+        user_id = decoded_token.get("user_id")
+    except BaseSecurityError as error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(error),
+        )
+    stmt = select(UserModel).where(UserModel.id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    stmt_token = select(RefreshTokenModel).where(RefreshTokenModel.token == token_data.refresh_token)
+    result = await db.execute(stmt_token)
+    refresh_token_record = result.scalars().first()
+
+    if not refresh_token_record:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token not found.",
+        )
+
+
+    new_access_token = jwt_manager.create_access_token({"user_id": user_id})
+
+    return TokenRefreshResponseSchema(access_token=new_access_token)

@@ -11,10 +11,9 @@ class Settings(BaseSettings):
     access_time_days: int = 7
     refresh_time_days: int = 30
 
-    secret_key_access: str = secrets.token_hex(32)
-    secret_key_refresh: str = secrets.token_hex(32)
-    jwt_signing_algorithm: str = "HS256"
-
+    secret_key_access: str
+    secret_key_refresh: str
+    jwt_signing_algorithm: str
 
     postgres_port: int
     postgres_user: str
