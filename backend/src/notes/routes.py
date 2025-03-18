@@ -26,7 +26,23 @@ from src.notes.schemas import (
 router = APIRouter()
 
 
-@router.get("/", response_model=list[NoteBaseSchema], status_code=status.HTTP_200_OK)
+@router.get(
+    "/",
+    response_model=list[NoteBaseSchema],
+    status_code=status.HTTP_200_OK,
+    summary="Get All Notes",
+    description="Retrieve a list of all notes from the database. Accessible to authenticated users.",
+    responses={
+        500: {
+            "description": "Internal Server Error - Database error occurred.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Database connection failed"}
+                }
+            }
+        }
+    }
+)
 async def get_notes(
         db: AsyncSession = Depends(get_db),
         current_user: UserModel = Depends(get_current_user) # noqa F401
@@ -42,7 +58,39 @@ async def get_notes(
         )
 
 
-@router.post("/", response_model=NoteCreateResponseSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=NoteCreateResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a New Note",
+    description="Create a new note with text and automatically generated summary using Gemini API. Requires authentication.",
+    responses={
+        504: {
+            "description": "Gateway Timeout - Summarization took too long.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Summarization took too long"}
+                }
+            }
+        },
+        503: {
+            "description": "Service Unavailable - Gemini API error.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Gemini API error: Failed to connect"}
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error - Database or unexpected error.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Failed to create note"}
+                }
+            }
+        }
+    }
+)
 async def create_note(
         note_data: NoteCreateRequestSchema,
         db: AsyncSession = Depends(get_db),
@@ -72,7 +120,31 @@ async def create_note(
         )
 
 
-@router.get("/{note_id}/", response_model=NoteBaseSchema, status_code=status.HTTP_200_OK)
+@router.get(
+    "/{note_id}/",
+    response_model=NoteBaseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Get a Specific Note",
+    description="Retrieve a single note by its ID. Accessible to authenticated users.",
+    responses={
+        404: {
+            "description": "Not Found - Note with the specified ID does not exist.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Note not found"}
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error - Database error.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Failed to create note"}
+                }
+            }
+        }
+    }
+)
 async def get_note(
         note_id: int,
         db: AsyncSession = Depends(get_db),
@@ -96,7 +168,47 @@ async def get_note(
         )
 
 
-@router.patch("/{note_id}/", response_model=NoteBaseSchema, status_code=status.HTTP_200_OK)
+@router.patch(
+    "/{note_id}/",
+    response_model=NoteBaseSchema,
+    status_code=status.HTTP_200_OK,
+    summary="Update a Note",
+    description="Update an existing note by creating a new version with the provided text and summary. Requires authentication.",
+    responses={
+        404: {
+            "description": "Not Found - Note with the specified ID does not exist.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Note not found"}
+                }
+            }
+        },
+        504: {
+            "description": "Gateway Timeout - Summarization took too long.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Summarization took too long"}
+                }
+            }
+        },
+        503: {
+            "description": "Service Unavailable - Gemini API error.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Gemini API error: Failed to connect"}
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error - Database or unexpected error.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Failed to update note"}
+                }
+            }
+        }
+    }
+)
 async def update_note(
         note_id: int,
         note_data: NoteUpdateRequestSchema,
@@ -137,7 +249,30 @@ async def update_note(
         )
 
 
-@router.delete("/{note_id}/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{note_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a Note",
+    description="Delete a note by its ID, updating version history if necessary. Requires authentication and ownership.",
+    responses={
+        404: {
+            "description": "Not Found - Note not found or user lacks permission.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Note not found or you don't have permission"}
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error - Database error.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Failed to delete note"}
+                }
+            }
+        }
+    }
+)
 async def delete_note(
         note_id: int,
         db: AsyncSession = Depends(get_db),
