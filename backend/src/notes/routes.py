@@ -1,5 +1,9 @@
 import asyncio
 
+import nltk # noqa F401
+import pandas as pd
+from nltk import word_tokenize
+from collections import Counter
 from fastapi import (
     APIRouter,
     status,
@@ -24,6 +28,87 @@ from src.notes.schemas import (
 
 
 router = APIRouter()
+
+nltk.download("punkt_tab")
+
+
+@router.get(
+    "/analytics/",
+    status_code=status.HTTP_200_OK,
+    summary="Get Notes Analytics",
+    description="Retrieve analytics for the authenticated user's notes, including total word count, average note length, most common words, and top 3 longest and shortest notes.",
+    responses={
+        404: {
+            "description": "Not Found - No notes found for the user.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "No notes found for the user"}
+                }
+            }
+        },
+        500: {
+            "description": "Internal Server Error - Database error occurred.",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Failed to retrieve analytics: database error"}
+                }
+            }
+        }
+    }
+)
+async def get_notes_analytics(
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(get_current_user)
+) :
+    try:
+        stmt = select(NoteModel).where(NoteModel.user_id == user.id)
+        result = await db.execute(stmt)
+        notes = result.scalars().all()
+
+        if not notes:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No notes found for the user"
+            )
+
+        notes_data = [{"id": note.id, "text": note.text} for note in notes]
+        df = pd.DataFrame(notes_data)
+
+        df["word_count"] = df["text"].apply(lambda x: len(word_tokenize(x)))
+
+        total_word_count = int(df["word_count"].sum())
+        average_note_length = float(df["word_count"].mean())
+
+        all_text = " ".join(df["text"]).lower()
+        words = [word for word in word_tokenize(all_text) if word.isalnum()]
+        most_common_words = Counter(words).most_common(3)
+
+        top_3_longest = [
+            {"id": int(row["id"]), "text": row["text"], "word_count": int(row["word_count"])}
+            for row in df.nlargest(3, "word_count")[["id", "text", "word_count"]].to_dict("records")
+        ]
+        top_3_shortest = [
+            {"id": int(row["id"]), "text": row["text"], "word_count": int(row["word_count"])}
+            for row in df.nsmallest(3, "word_count")[["id", "text", "word_count"]].to_dict("records")
+        ]
+
+        return {
+            "total_word_count": total_word_count,
+            "average_note_length": average_note_length,
+            "most_common_words": most_common_words,
+            "top_3_longest_notes": top_3_longest,
+            "top_3_shortest_notes": top_3_shortest
+        }
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve analytics: {str(e)}"
+        )
+    except LookupError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve analytics: NLTK resource punkt_tab not found. Run `nltk.download('punkt_tab')`"
+        )
 
 
 @router.get(
