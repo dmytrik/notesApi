@@ -29,7 +29,7 @@ from src.notes.schemas import (
 
 router = APIRouter()
 
-nltk.download("punkt_tab")
+nltk.download("punkt")
 
 
 @router.get(
@@ -75,12 +75,11 @@ async def get_notes_analytics(
         df = pd.DataFrame(notes_data)
 
         df["word_count"] = df["text"].apply(lambda x: len(word_tokenize(x)))
-
         total_word_count = int(df["word_count"].sum())
         average_note_length = float(df["word_count"].mean())
 
         all_text = " ".join(df["text"]).lower()
-        words = [word for word in word_tokenize(all_text) if word.isalnum()]
+        words = [word.lower() for word in word_tokenize(all_text) if word.isalpha()]
         most_common_words = Counter(words).most_common(3)
 
         top_3_longest = [
