@@ -22,7 +22,7 @@ from src.auth.schemas import (
 )
 from src.auth.models import UserModel, RefreshTokenModel
 from security.interfaces import JWTAuthManagerInterface
-from security.jwt_manager import get_jwt_auth_manager
+from core.dependencies import get_jwt_auth_manager
 from security.exceptions import BaseSecurityError
 
 
@@ -240,7 +240,6 @@ async def refresh_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token not found.",
         )
-
 
     new_access_token = jwt_manager.create_access_token({"user_id": user_id})
 

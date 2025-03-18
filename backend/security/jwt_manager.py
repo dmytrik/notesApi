@@ -72,11 +72,3 @@ class JWTAuthManager(JWTAuthManagerInterface):
             raise TokenExpiredError
         except JWTError:
             raise InvalidTokenError
-
-
-def get_jwt_auth_manager():
-    return JWTAuthManager(
-        secret_key_access=settings.secret_key_access,
-        secret_key_refresh=settings.secret_key_refresh,
-        algorithm=settings.jwt_signing_algorithm
-    )
