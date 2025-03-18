@@ -404,6 +404,18 @@ files = [
 all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2)"]
 
 [[package]]
+name = "inflection"
+version = "0.5.1"
+description = "A port of Ruby on Rails inflector to Python"
+optional = false
+python-versions = ">=3.5"
+groups = ["main"]
+files = [
+    {file = "inflection-0.5.1-py2.py3-none-any.whl", hash = "sha256:f38b2b640938a4f35ade69ac3d053042959b62a0f1076a5bbaa1b9526605a8a2"},
+    {file = "inflection-0.5.1.tar.gz", hash = "sha256:1a29730d366e996aaacffb2f1f1cb9593dc38e2ddd30c91250c6dde09ea9b417"},
+]
+
+[[package]]
 name = "mako"
 version = "1.3.9"
 description = "A super-fast templating language that borrows the best ideas from the existing templating languages."
@@ -511,6 +523,21 @@ argon2 = ["argon2-cffi (>=18.2.0)"]
 bcrypt = ["bcrypt (>=3.1.0)"]
 build-docs = ["cloud-sptheme (>=1.10.1)", "sphinx (>=1.6)", "sphinxcontrib-fulltoc (>=1.2.0)"]
 totp = ["cryptography"]
+
+[[package]]
+name = "profanityfilter"
+version = "2.1.0"
+description = "A universal Python library for detecting and/or filtering profane words."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "profanityfilter-2.1.0-py2.py3-none-any.whl", hash = "sha256:e1bc07012760fd74512a335abb93a36877831ed26abab78bfe31bebb68f8c844"},
+    {file = "profanityfilter-2.1.0.tar.gz", hash = "sha256:0ede04e92a9d7255faa52b53776518edc6586dda828aca677c74b5994dfdd9d8"},
+]
+
+[package.dependencies]
+inflection = "*"
 
 [[package]]
 name = "pyasn1"
@@ -903,4 +930,4 @@ standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.6.3)
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "a258ed3abf44212012fed60e9af098f5b28621931779855177e2123f888c569f"
+content-hash = "fbb2e9639cfe73ad037b4bd336dc6679cee4f89afa2472a6ea29ac765145816c"
