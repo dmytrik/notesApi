@@ -19,6 +19,7 @@ frontend/.npm/
 Icon
 
 backend/nltk_data/
+backend/.coverage
 # Thumbnails
 ._*
 
