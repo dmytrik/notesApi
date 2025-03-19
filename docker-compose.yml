@@ -15,7 +15,7 @@ services:
       retries: 5
       start_period: 15s
 
-  app:
+  backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -34,11 +34,32 @@ services:
     command: >
       sh -c "sleep 5 && alembic upgrade head && uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
     healthcheck:
-      test: [ "CMD", "curl", "--fail", "http://localhost:8000/" ]
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/"]
       interval: 10s
       retries: 10
-      start_period: 50s
+      start_period: 60s
       timeout: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+      - node_modules:/app/node_modules
+    depends_on:
+      - backend
+    restart: always
+    command: npm run serve
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
 
 volumes:
   my_db:
+  node_modules:

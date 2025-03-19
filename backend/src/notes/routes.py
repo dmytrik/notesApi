@@ -26,7 +26,7 @@ from src.notes.schemas import (
 
 router = APIRouter()
 
-nltk.download("punkt")
+nltk.download("punkt_tab")
 
 
 @router.get(

@@ -1,0 +1,24 @@
+@import "variables";
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+@mixin button {
+  padding: $spacing-sm;
+  background-color: $primary;
+  color: white;
+  border: none;
+  border-radius: $border-radius;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $primary-hover;
+  }
+}

@@ -6,7 +6,6 @@ frontend/*.log.*
 frontend/*.local
 frontend/*.env
 frontend/*.env.*
-!frontend/.env.example
 .vscode/
 
 ### macOS ###
