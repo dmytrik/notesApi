@@ -1,15 +1,10 @@
 import asyncio
 from collections import Counter
 
-import nltk # noqa F401
+import nltk  # noqa F401
 import pandas as pd
 from nltk import word_tokenize
-from fastapi import (
-    APIRouter,
-    status,
-    Depends,
-    HTTPException
-)
+from fastapi import APIRouter, status, Depends, HTTPException
 from google.api_core import exceptions
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,7 +20,7 @@ from src.notes.schemas import (
     NoteCreateRequestSchema,
     NoteBaseSchema,
     NoteUpdateRequestSchema,
-    NoteAnalyticsResponseSchema
+    NoteAnalyticsResponseSchema,
 )
 
 
@@ -47,35 +42,37 @@ nltk.download("punkt")
                 "application/json": {
                     "example": {"detail": "No notes found for the user"}
                 }
-            }
+            },
         },
         500: {
             "description": "Internal Server Error - Database error occurred.",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Failed to retrieve analytics: database error"}
+                    "example": {
+                        "detail": "Failed to retrieve analytics: database error"
+                    }
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def get_notes_analytics(
     db: AsyncSession = Depends(get_db),
-    user: UserModel = Depends(get_current_user)
+    user: UserModel = Depends(get_current_user),
 ) -> NoteAnalyticsResponseSchema:
     """
-        Retrieve analytics for the user's notes.
+    Retrieve analytics for the user's notes.
 
-        Args:
-            db: The asynchronous database session.
-            user: The authenticated user.
+    Args:
+        db: The asynchronous database session.
+        user: The authenticated user.
 
-        Returns:
-            Dictionary containing analytics: total word count, average note length,
-            most common words, and top 3 longest/shortest notes.
+    Returns:
+        Dictionary containing analytics: total word count, average note length,
+        most common words, and top 3 longest/shortest notes.
 
-        Raises:
-            HTTPException: 404 if no notes found, 500 if database or NLTK error occurs.
+    Raises:
+        HTTPException: 404 if no notes found, 500 if database or NLTK error occurs.
     """
     try:
         stmt = select(NoteModel).where(NoteModel.user_id == user.id)
@@ -85,7 +82,7 @@ async def get_notes_analytics(
         if not notes:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No notes found for the user"
+                detail="No notes found for the user",
             )
 
         notes_data = [{"id": note.id, "text": note.text} for note in notes]
@@ -96,16 +93,30 @@ async def get_notes_analytics(
         average_note_length = float(df["word_count"].mean())
 
         all_text = " ".join(df["text"]).lower()
-        words = [word.lower() for word in word_tokenize(all_text) if word.isalpha()]
+        words = [
+            word.lower() for word in word_tokenize(all_text) if word.isalpha()
+        ]
         most_common_words = Counter(words).most_common(3)
 
         top_3_longest = [
-            {"id": int(row["id"]), "text": row["text"], "word_count": int(row["word_count"])}
-            for row in df.nlargest(3, "word_count")[["id", "text", "word_count"]].to_dict("records")
+            {
+                "id": int(row["id"]),
+                "text": row["text"],
+                "word_count": int(row["word_count"]),
+            }
+            for row in df.nlargest(3, "word_count")[
+                ["id", "text", "word_count"]
+            ].to_dict("records")
         ]
         top_3_shortest = [
-            {"id": int(row["id"]), "text": row["text"], "word_count": int(row["word_count"])}
-            for row in df.nsmallest(3, "word_count")[["id", "text", "word_count"]].to_dict("records")
+            {
+                "id": int(row["id"]),
+                "text": row["text"],
+                "word_count": int(row["word_count"]),
+            }
+            for row in df.nsmallest(3, "word_count")[
+                ["id", "text", "word_count"]
+            ].to_dict("records")
         ]
 
         return {
@@ -113,17 +124,17 @@ async def get_notes_analytics(
             "average_note_length": average_note_length,
             "most_common_words": most_common_words,
             "top_3_longest_notes": top_3_longest,
-            "top_3_shortest_notes": top_3_shortest
+            "top_3_shortest_notes": top_3_shortest,
         }
     except SQLAlchemyError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analytics: {str(e)}"
+            detail=f"Failed to retrieve analytics: {str(e)}",
         )
     except LookupError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve analytics: NLTK resource punkt_tab not found. Run `nltk.download('punkt_tab')`"
+            detail="Failed to retrieve analytics: NLTK resource punkt_tab not found. Run `nltk.download('punkt_tab')`",
         )
 
 
@@ -140,35 +151,34 @@ async def get_notes_analytics(
                 "application/json": {
                     "example": {"detail": "Database connection failed"}
                 }
-            }
+            },
         }
-    }
+    },
 )
 async def get_notes(
-        db: AsyncSession = Depends(get_db),
-        current_user: UserModel = Depends(get_current_user) # noqa F401
+    db: AsyncSession = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user),  # noqa F401
 ) -> list[NoteBaseSchema]:
     """
-        Retrieve all notes from the database for the authenticated user.
+    Retrieve all notes from the database for the authenticated user.
 
-        Args:
-            db: The asynchronous database session.
-            current_user: The authenticated user (currently unused but required for authentication).
+    Args:
+        db: The asynchronous database session.
+        current_user: The authenticated user (currently unused but required for authentication).
 
-        Returns:
-            A list of notes in NoteBaseSchema format.
+    Returns:
+        A list of notes in NoteBaseSchema format.
 
-        Raises:
-            HTTPException: 500 if a database error occurs.
-        """
+    Raises:
+        HTTPException: 500 if a database error occurs.
+    """
     try:
         stmt = select(NoteModel)
         result = await db.execute(stmt)
         return result.scalars().all()
     except SQLAlchemyError as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
@@ -185,15 +195,17 @@ async def get_notes(
                 "application/json": {
                     "example": {"detail": "Summarization took too long"}
                 }
-            }
+            },
         },
         503: {
             "description": "Service Unavailable - Gemini API error.",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Gemini API error: Failed to connect"}
+                    "example": {
+                        "detail": "Gemini API error: Failed to connect"
+                    }
                 }
-            }
+            },
         },
         500: {
             "description": "Internal Server Error - Database or unexpected error.",
@@ -201,34 +213,36 @@ async def get_notes(
                 "application/json": {
                     "example": {"detail": "Failed to create note"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def create_note(
-        note_data: NoteCreateRequestSchema,
-        db: AsyncSession = Depends(get_db),
-        user: UserModel = Depends(get_current_user)
+    note_data: NoteCreateRequestSchema,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
 ) -> NoteCreateResponseSchema:
     """
-        Create a new note with an auto-generated summary.
+    Create a new note with an auto-generated summary.
 
-        Args:
-            note_data: The request data containing the note text.
-            db: The asynchronous database session.
-            user: The authenticated user who owns the note.
+    Args:
+        note_data: The request data containing the note text.
+        db: The asynchronous database session.
+        user: The authenticated user who owns the note.
 
-        Returns:
-            The created note in NoteCreateResponseSchema format.
+    Returns:
+        The created note in NoteCreateResponseSchema format.
 
-        Raises:
-            HTTPException:
-                - 504 if summarization exceeds the timeout (10 seconds).
-                - 503 if the Gemini API encounters an error.
-                - 500 if a database error occurs.
+    Raises:
+        HTTPException:
+            - 504 if summarization exceeds the timeout (10 seconds).
+            - 503 if the Gemini API encounters an error.
+            - 500 if a database error occurs.
     """
     try:
-        note_summary = await asyncio.wait_for(summarize_note(note_data.text), timeout=10)
+        note_summary = await asyncio.wait_for(
+            summarize_note(note_data.text), timeout=10
+        )
         note = NoteModel(
             text=note_data.text,
             summary=note_summary,
@@ -239,14 +253,20 @@ async def create_note(
         await db.refresh(note)
         return note
     except asyncio.TimeoutError:
-        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Summarization took too long")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Summarization took too long",
+        )
     except exceptions.GoogleAPIError as api_err:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Gemini API error: {str(api_err)}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Gemini API error: {str(api_err)}",
+        )
     except SQLAlchemyError:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create note"
+            detail="Failed to create note",
         )
 
 
@@ -260,10 +280,8 @@ async def create_note(
         404: {
             "description": "Not Found - Note with the specified ID does not exist.",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Note not found"}
-                }
-            }
+                "application/json": {"example": {"detail": "Note not found"}}
+            },
         },
         500: {
             "description": "Internal Server Error - Database error.",
@@ -271,30 +289,30 @@ async def create_note(
                 "application/json": {
                     "example": {"detail": "Failed to create note"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def get_note(
-        note_id: int,
-        db: AsyncSession = Depends(get_db),
-        user: UserModel = Depends(get_current_user) # noqa F401
+    note_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(get_current_user),  # noqa F401
 ) -> NoteBaseSchema:
     """
-        Retrieve a specific note by its ID.
+    Retrieve a specific note by its ID.
 
-        Args:
-            note_id: The ID of the note to retrieve.
-            db: The asynchronous database session.
-            user: The authenticated user (currently unused but required for authentication).
+    Args:
+        note_id: The ID of the note to retrieve.
+        db: The asynchronous database session.
+        user: The authenticated user (currently unused but required for authentication).
 
-        Returns:
-            The requested note in NoteBaseSchema format.
+    Returns:
+        The requested note in NoteBaseSchema format.
 
-        Raises:
-            HTTPException:
-                - 404 if the note with the specified ID is not found.
-                - 500 if a database error occurs.
+    Raises:
+        HTTPException:
+            - 404 if the note with the specified ID is not found.
+            - 500 if a database error occurs.
     """
     try:
         stmt = select(NoteModel).where(NoteModel.id == note_id)
@@ -303,14 +321,13 @@ async def get_note(
 
         if not note:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Note not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
             )
         return note
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create note"
+            detail="Failed to create note",
         )
 
 
@@ -324,10 +341,8 @@ async def get_note(
         404: {
             "description": "Not Found - Note with the specified ID does not exist.",
             "content": {
-                "application/json": {
-                    "example": {"detail": "Note not found"}
-                }
-            }
+                "application/json": {"example": {"detail": "Note not found"}}
+            },
         },
         504: {
             "description": "Gateway Timeout - Summarization took too long.",
@@ -335,15 +350,17 @@ async def get_note(
                 "application/json": {
                     "example": {"detail": "Summarization took too long"}
                 }
-            }
+            },
         },
         503: {
             "description": "Service Unavailable - Gemini API error.",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Gemini API error: Failed to connect"}
+                    "example": {
+                        "detail": "Gemini API error: Failed to connect"
+                    }
                 }
-            }
+            },
         },
         500: {
             "description": "Internal Server Error - Database or unexpected error.",
@@ -351,34 +368,34 @@ async def get_note(
                 "application/json": {
                     "example": {"detail": "Failed to update note"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def update_note(
-        note_id: int,
-        note_data: NoteUpdateRequestSchema,
-        db: AsyncSession = Depends(get_db),
-        user: UserModel = Depends(get_current_user)
+    note_id: int,
+    note_data: NoteUpdateRequestSchema,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
 ) -> NoteBaseSchema:
     """
-        Update an existing note by creating a new version.
+    Update an existing note by creating a new version.
 
-        Args:
-            note_id: The ID of the note to update.
-            note_data: The request data containing the updated note text.
-            db: The asynchronous database session.
-            user: The authenticated user who owns the note.
+    Args:
+        note_id: The ID of the note to update.
+        note_data: The request data containing the updated note text.
+        db: The asynchronous database session.
+        user: The authenticated user who owns the note.
 
-        Returns:
-            The updated note in NoteBaseSchema format.
+    Returns:
+        The updated note in NoteBaseSchema format.
 
-        Raises:
-            HTTPException:
-                - 404 if the note with the specified ID is not found.
-                - 504 if summarization exceeds the timeout (10 seconds).
-                - 503 if the Gemini API encounters an error.
-                - 500 if a database error occurs.
+    Raises:
+        HTTPException:
+            - 404 if the note with the specified ID is not found.
+            - 504 if summarization exceeds the timeout (10 seconds).
+            - 503 if the Gemini API encounters an error.
+            - 500 if a database error occurs.
     """
     try:
         stmt = select(NoteModel).where(NoteModel.id == note_id)
@@ -387,11 +404,12 @@ async def update_note(
 
         if not note:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Note not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
             )
 
-        note_summary = await asyncio.wait_for(summarize_note(note_data.text), timeout=10)
+        note_summary = await asyncio.wait_for(
+            summarize_note(note_data.text), timeout=10
+        )
         note = NoteModel(
             text=note_data.text,
             previous_version_id=note_id,
@@ -403,14 +421,20 @@ async def update_note(
         await db.refresh(note)
         return note
     except asyncio.TimeoutError:
-        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Summarization took too long")
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Summarization took too long",
+        )
     except exceptions.GoogleAPIError as api_err:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=f"Gemini API error: {str(api_err)}")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Gemini API error: {str(api_err)}",
+        )
     except SQLAlchemyError:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update note"
+            detail="Failed to update note",
         )
 
 
@@ -424,9 +448,11 @@ async def update_note(
             "description": "Not Found - Note not found or user lacks permission.",
             "content": {
                 "application/json": {
-                    "example": {"detail": "Note not found or you don't have permission"}
+                    "example": {
+                        "detail": "Note not found or you don't have permission"
+                    }
                 }
-            }
+            },
         },
         500: {
             "description": "Internal Server Error - Database error.",
@@ -434,44 +460,45 @@ async def update_note(
                 "application/json": {
                     "example": {"detail": "Failed to delete note"}
                 }
-            }
-        }
-    }
+            },
+        },
+    },
 )
 async def delete_note(
-        note_id: int,
-        db: AsyncSession = Depends(get_db),
-        user: UserModel = Depends(get_current_user)
+    note_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: UserModel = Depends(get_current_user),
 ) -> None:
     """
-        Delete a note and update its version history if applicable.
+    Delete a note and update its version history if applicable.
 
-        Args:
-            note_id: The ID of the note to delete.
-            db: The asynchronous database session.
-            user: The authenticated user who owns the note.
+    Args:
+        note_id: The ID of the note to delete.
+        db: The asynchronous database session.
+        user: The authenticated user who owns the note.
 
-        Returns:
-            None (204 No Content).
+    Returns:
+        None (204 No Content).
 
-        Raises:
-            HTTPException:
-                - 404 if the note is not found or the user lacks permission.
-                - 500 if a database error occurs.
+    Raises:
+        HTTPException:
+            - 404 if the note is not found or the user lacks permission.
+            - 500 if a database error occurs.
     """
     try:
         stmt = select(NoteModel).where(
-            NoteModel.id == note_id,
-            NoteModel.user_id == user.id
+            NoteModel.id == note_id, NoteModel.user_id == user.id
         )
         result = await db.execute(stmt)
         note = result.scalars().first()
         if not note:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Note not found or you don't have permission"
+                detail="Note not found or you don't have permission",
             )
-        parent_stmt = select(NoteModel).where(NoteModel.previous_version_id == note_id)
+        parent_stmt = select(NoteModel).where(
+            NoteModel.previous_version_id == note_id
+        )
         parent_result = await db.execute(parent_stmt)
         parent_note = parent_result.scalars().first()
 
@@ -479,7 +506,9 @@ async def delete_note(
             if not note.previous_version_id:
                 parent_note.previous_version_id = None
             else:
-                child_stmt = select(NoteModel).where(NoteModel.id == note.previous_version_id)
+                child_stmt = select(NoteModel).where(
+                    NoteModel.id == note.previous_version_id
+                )
                 child_result = await db.execute(child_stmt)
                 child_note = child_result.scalars().first()
                 if child_note:
@@ -494,5 +523,5 @@ async def delete_note(
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to delete note"
+            detail="Failed to delete note",
         )

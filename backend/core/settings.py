@@ -39,4 +39,5 @@ class Settings(BaseSettings):
             f"@{self.db_host}:{self.postgres_port}/{self.postgres_db}"
         )
 
+
 settings = Settings()

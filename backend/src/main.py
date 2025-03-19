@@ -9,5 +9,9 @@ app = FastAPI(
 )
 
 api_version_prefix = "/api/v1"
-app.include_router(auth_router, prefix=f"{api_version_prefix}/auth", tags=["auth"])
-app.include_router(notes_router, prefix=f"{api_version_prefix}/notes", tags=["notes"])
+app.include_router(
+    auth_router, prefix=f"{api_version_prefix}/auth", tags=["auth"]
+)
+app.include_router(
+    notes_router, prefix=f"{api_version_prefix}/notes", tags=["notes"]
+)
