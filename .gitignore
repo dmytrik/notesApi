@@ -1,5 +1,13 @@
-# Created by https://www.toptal.com/developers/gitignore/api/python,pycharm,macos
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm,macos
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.log
+frontend/*.log.*
+frontend/*.local
+frontend/*.env
+frontend/*.env.*
+!frontend/.env.example
+.vscode/
 
 ### macOS ###
 # General
