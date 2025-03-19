@@ -6,6 +6,7 @@ frontend/*.log.*
 frontend/*.local
 frontend/*.env
 frontend/*.env.*
+frontend/.npm/
 .vscode/
 
 ### macOS ###
