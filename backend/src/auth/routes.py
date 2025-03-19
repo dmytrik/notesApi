@@ -62,14 +62,26 @@ async def register_user(
     user_data: UserRegistrationRequestSchema,
     db: AsyncSession = Depends(get_db),
 ) -> UserRegistrationResponseSchema:
+    """
+        Register a new user with email and password.
 
+        Args:
+            user_data: The user registration data including email and password.
+            db: The asynchronous database session.
+
+        Returns:
+            UserRegistrationResponseSchema containing the registered user's details.
+
+        Raises:
+            HTTPException: 409 if email already exists, 500 if database error occurs.
+    """
     stmt = select(UserModel).where(UserModel.email == user_data.email)
     result = await db.execute(stmt)
     existing_user = result.scalars().first()
 
     if existing_user:
         raise HTTPException(
-            status_code=409,
+            status_code=status.HTTP_409_CONFLICT,
             detail=f"A user with this email {user_data.email} already exists."
         )
 
@@ -134,7 +146,20 @@ async def login_user(
         db: AsyncSession = Depends(get_db),
         jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
 ) -> UserLoginResponseSchema:
+    """
+        Authenticate a user and return access and refresh tokens.
 
+        Args:
+            login_data: The user login data including email and password.
+            db: The asynchronous database session.
+            jwt_manager: The JWT authentication manager.
+
+        Returns:
+            UserLoginResponseSchema with access and refresh tokens.
+
+        Raises:
+            HTTPException: 401 if credentials are invalid, 500 if database error occurs.
+    """
     stmt = select(UserModel).where(UserModel.email == login_data.email)
     result = await db.execute(stmt)
     user = result.scalars().first()
@@ -212,7 +237,26 @@ async def refresh_access_token(
         db: AsyncSession = Depends(get_db),
         jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
 ) -> TokenRefreshResponseSchema:
+    """
+        Refresh an access token using a valid refresh token.
 
+        This endpoint decodes the provided refresh token, verifies its validity against the database,
+        and issues a new access token for the associated user.
+
+        Args:
+            token_data: The request schema containing the refresh token.
+            db: The asynchronous database session for querying user and token data.
+            jwt_manager: The JWT authentication manager for token operations.
+
+        Returns:
+            TokenRefreshResponseSchema containing the new access token.
+
+        Raises:
+            HTTPException:
+                - 400 if the refresh token is invalid or expired.
+                - 404 if the user associated with the token is not found.
+                - 401 if the refresh token is not found in the database.
+    """
     try:
         decoded_token = jwt_manager.decode_refresh_token(token_data.refresh_token)
         user_id = decoded_token.get("user_id")

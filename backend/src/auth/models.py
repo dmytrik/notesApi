@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 
 from sqlalchemy import (
     Integer,
@@ -19,6 +19,13 @@ from src.auth.validators import validate_password_strength
 
 
 class UserModel(BaseModel):
+    """
+        Database model representing a user.
+
+        This model stores user information including email and hashed password,
+        and maintains relationships with notes and refresh tokens.
+    """
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(
@@ -40,12 +47,27 @@ class UserModel(BaseModel):
 
     @property
     def password(self) -> None:
+        """
+            Prevent reading the password directly.
+
+            Raises:
+                AttributeError: Always raised to indicate password is write-only.
+        """
         raise AttributeError(
             "Password is write-only. Use the setter to set the password."
         )
 
     @password.setter
     def password(self, raw_password: str) -> None:
+        """
+            Set and hash the user's password.
+
+            Args:
+                raw_password: The plain text password to hash and store.
+
+            Raises:
+                ValueError: If the password does not meet strength requirements.
+        """
         validate_password_strength(raw_password)
         self._hashed_password = hash_password(raw_password)
 
@@ -60,6 +82,12 @@ class UserModel(BaseModel):
 
 
 class RefreshTokenModel(BaseModel):
+    """
+        Database model representing a refresh token.
+
+        This model stores refresh tokens associated with users, including their expiration dates.
+    """
+
     __tablename__ = "refresh_tokens"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     token: Mapped[str] = mapped_column(

@@ -13,6 +13,13 @@ from core.database import BaseModel
 
 
 class NoteModel(BaseModel):
+    """
+        Database model representing a note.
+
+        This model stores note information including text, summary, and versioning,
+        with a relationship to the owning user.
+    """
+
     __tablename__ = "notes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -27,4 +34,10 @@ class NoteModel(BaseModel):
     user: Mapped["UserModel"] = relationship("UserModel", back_populates="notes")
 
     def __repr__(self) -> str:
+        """
+            Return a string representation of the NoteModel instance.
+
+            Returns:
+                A string in the format '<Note user_email text>'.
+        """
         return f"<Note {self.user.email} \n {self.text}>"

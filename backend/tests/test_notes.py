@@ -15,7 +15,23 @@ jwt_auth_manager = get_jwt_auth_manager()
 
 
 @pytest.mark.asyncio
-async def test_get_notes_success(client: AsyncClient, db_session: AsyncSession, mocker, token):
+async def test_get_notes_success(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker,
+        token
+):
+    """
+        Test successful retrieval of all notes.
+
+        Verifies that an authenticated user can retrieve their notes from the database.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+            token: The JWT token fixture for authentication.
+    """
     user = UserModel(email="notes@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()
@@ -32,8 +48,25 @@ async def test_get_notes_success(client: AsyncClient, db_session: AsyncSession, 
     assert len(response.json()) == 1
     assert response.json()[0]["text"] == "Test note"
 
+
 @pytest.mark.asyncio
-async def test_create_note_success(client: AsyncClient, db_session: AsyncSession, mocker, token):
+async def test_create_note_success(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker,
+        token
+):
+    """
+        Test successful creation of a note.
+
+        Verifies that an authenticated user can create a note with a generated summary.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+            token: The JWT token fixture for authentication.
+    """
     user = UserModel(email="create@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()
@@ -49,8 +82,25 @@ async def test_create_note_success(client: AsyncClient, db_session: AsyncSession
     assert response.json()["text"] == "New note"
     assert response.json()["summary"] == "Summary"
 
+
 @pytest.mark.asyncio
-async def test_create_note_timeout(client: AsyncClient, db_session: AsyncSession, mocker, token):
+async def test_create_note_timeout(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker,
+        token
+):
+    """
+        Test note creation with a summarization timeout.
+
+        Verifies that a timeout during summarization returns a gateway timeout error.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+            token: The JWT token fixture for authentication.
+    """
     user = UserModel(email="timeout@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()
@@ -62,11 +112,28 @@ async def test_create_note_timeout(client: AsyncClient, db_session: AsyncSession
     headers = {"Authorization": f"Bearer {token}"}
     response = await client.post("/notes/", json=payload, headers=headers)
 
-    assert response.status_code == 504
+    assert response.status_code == status.HTTP_504_GATEWAY_TIMEOUT
     assert response.json()["detail"] == "Summarization took too long"
 
+
 @pytest.mark.asyncio
-async def test_get_note_success(client: AsyncClient, db_session: AsyncSession, mocker, token):
+async def test_get_note_success(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker,
+        token
+):
+    """
+        Test successful retrieval of a specific note.
+
+        Verifies that an authenticated user can retrieve a note by its ID.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+            token: The JWT token fixture for authentication.
+    """
     user = UserModel(email="getnote@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()
@@ -83,8 +150,25 @@ async def test_get_note_success(client: AsyncClient, db_session: AsyncSession, m
     assert response.json()["text"] == "Test note"
     assert response.json()["summary"] == "Summary"
 
+
 @pytest.mark.asyncio
-async def test_get_note_not_found(client: AsyncClient, db_session: AsyncSession, mocker, token):
+async def test_get_note_not_found(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker,
+        token
+):
+    """
+        Test retrieval of a non-existent note.
+
+        Verifies that requesting a note with an invalid ID returns a not found error.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+            token: The JWT token fixture for authentication.
+    """
     user = UserModel(email="notfound@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()
@@ -96,8 +180,25 @@ async def test_get_note_not_found(client: AsyncClient, db_session: AsyncSession,
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "Note not found"
 
+
 @pytest.mark.asyncio
-async def test_update_note_success(client: AsyncClient, db_session: AsyncSession, mocker, token):
+async def test_update_note_success(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker,
+        token
+):
+    """
+        Test successful update of a note.
+
+        Verifies that an authenticated user can update a note with new text and summary.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+            token: The JWT token fixture for authentication.
+    """
     user = UserModel(email="update@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()
@@ -117,8 +218,24 @@ async def test_update_note_success(client: AsyncClient, db_session: AsyncSession
     assert response.json()["text"] == "Updated note"
     assert response.json()["summary"] == "New summary"
 
+
 @pytest.mark.asyncio
-async def test_delete_note_success(client: AsyncClient, db_session: AsyncSession, mocker):
+async def test_delete_note_success(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker
+):
+    """
+        Test successful deletion of a note.
+
+        Verifies that an authenticated user can delete their own note
+        and it is removed from the database.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+    """
     user = UserModel(email="delete@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()
@@ -139,8 +256,26 @@ async def test_delete_note_success(client: AsyncClient, db_session: AsyncSession
     deleted_note = await db_session.get(NoteModel, note.id)
     assert deleted_note is None
 
+
 @pytest.mark.asyncio
-async def test_delete_note_not_owner(client: AsyncClient, db_session: AsyncSession, mocker, token):
+async def test_delete_note_not_owner(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker,
+        token
+):
+    """
+        Test deletion of a note by a non-owner.
+
+        Verifies that a user cannot delete a note they do not own,
+        resulting in a not found error.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+            token: The JWT token fixture for authentication.
+    """
     user1 = UserModel(email="user1@example.com", password="StrongPass123!")
     user2 = UserModel(email="user2@example.com", password="StrongPass123!")
     db_session.add_all([user1, user2])
@@ -157,8 +292,23 @@ async def test_delete_note_not_owner(client: AsyncClient, db_session: AsyncSessi
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "Note not found or you don't have permission"
 
+
 @pytest.mark.asyncio
-async def test_get_notes_analytics_success(client: AsyncClient, db_session: AsyncSession, mocker):
+async def test_get_notes_analytics_success(
+        client: AsyncClient,
+        db_session: AsyncSession,
+        mocker
+):
+    """
+        Test successful retrieval of note analytics.
+
+        Verifies that an authenticated user can retrieve analytics for their notes.
+
+        Args:
+            client: The asynchronous HTTP client for making requests.
+            db_session: The asynchronous database session for database operations.
+            mocker: The pytest-mock fixture for mocking dependencies.
+    """
     user = UserModel(email="analytics@example.com", password="StrongPass123!")
     db_session.add(user)
     await db_session.commit()

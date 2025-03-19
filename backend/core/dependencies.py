@@ -1,4 +1,9 @@
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import (
+    Depends,
+    HTTPException,
+    status,
+    Request
+)
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,13 +16,38 @@ from src.auth.models import UserModel
 
 
 def get_jwt_auth_manager() -> JWTAuthManagerInterface:
+    """
+        Create an instance of JWTAuthManager for token management.
+
+        Returns:
+            An instance of JWTAuthManager implementing JWTAuthManagerInterface.
+
+        Example:
+            jwt_manager = get_jwt_auth_manager()
+            token = jwt_manager.create_access_token({"user_id": 1})
+    """
     return JWTAuthManager(
         secret_key_access=settings.secret_key_access,
         secret_key_refresh=settings.secret_key_refresh,
         algorithm=settings.jwt_signing_algorithm
     )
 
+
 def get_token(request: Request) -> str:
+    """
+        Extract the Bearer token from the Authorization header.
+
+        Args:
+            request: The incoming HTTP request containing headers.
+
+        Returns:
+            The extracted Bearer token as a string.
+
+        Raises:
+            HTTPException:
+                - 401 if the Authorization header is missing.
+                - 401 if the Authorization header format is invalid (not 'Bearer <token>').
+    """
     authorization: str = request.headers.get("Authorization")
 
     if not authorization:
@@ -36,11 +66,27 @@ def get_token(request: Request) -> str:
 
     return token
 
+
 async def get_current_user(
         token: str = Depends(get_token),
         jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
         db: AsyncSession = Depends(get_db)
-) -> int:
+) -> UserModel:
+    """
+        Retrieve the current authenticated user based on the provided access token.
+
+        Args:
+            token: The Bearer token extracted from the Authorization header.
+            jwt_manager: The JWT manager for decoding the token.
+            db: The asynchronous database session for querying the user.
+
+        Returns:
+            The authenticated UserModel instance.
+
+        Raises:
+            HTTPException:
+                - 401 if the token is invalid, expired, or the user is not found.
+    """
     try:
         payload = jwt_manager.decode_access_token(token)
         user_id = payload.get("user_id")
