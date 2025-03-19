@@ -1,7 +1,6 @@
 import asyncio
 from collections import Counter
 
-import nltk  # noqa F401
 import pandas as pd
 from nltk import word_tokenize
 from fastapi import APIRouter, status, Depends, HTTPException
@@ -26,15 +25,14 @@ from src.notes.schemas import (
 
 router = APIRouter()
 
-nltk.download("punkt_tab")
-
 
 @router.get(
     "/analytics/",
     status_code=status.HTTP_200_OK,
     summary="Get Notes Analytics",
     response_model=NoteAnalyticsResponseSchema,
-    description="Retrieve analytics for the authenticated user's notes, including total word count, average note length, most common words, and top 3 longest and shortest notes.",
+    description="Retrieve analytics for the authenticated user's notes, including total word count, "
+                "average note length, most common words, and top 3 longest and shortest notes.",
     responses={
         404: {
             "description": "Not Found - No notes found for the user.",
@@ -518,7 +516,6 @@ async def delete_note(
 
         await db.delete(note)
         await db.commit()
-        return None
     except SQLAlchemyError:
         await db.rollback()
         raise HTTPException(
