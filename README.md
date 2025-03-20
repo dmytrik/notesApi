@@ -8,20 +8,6 @@
 
 A RESTful API built with FastAPI for managing user notes with version history, integrated analytics, and a Vue.js frontend. This project fulfills the core requirements of the test assignment while implementing bonus features like Docker containerization and a frontend interface.
 
-## Table of Contents
-- [Features](#features)
-- [Core Requirements](#core-requirements)
-- [Bonus Features](#bonus-features)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Running the Application](#running-the-application)
-- [API Endpoints](#api-endpoints)
-- [Analytics](#analytics)
-- [Testing](#testing)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-
 ## Features
 - **CRUD Operations:** Create, read, update, and delete notes with version history tracking.
 - **Analytics:** Calculate total word count, average note length, most common words, and top 3 longest/shortest notes.
@@ -54,7 +40,7 @@ The project meets the following test assignment requirements:
 
 5. **Testing:**
    - Comprehensive unit and integration tests using `pytest`.
-   - Achieves **80% test coverage** (verified with `coverage` and `pytest-cov`).
+   - Achieves **80% test coverage** (verified with `coverage`).
    - Mocks external dependencies (e.g., database) where applicable.
 
 ## Bonus Features
@@ -132,16 +118,16 @@ docker-compose down -v
 
 ## API Endpoints
 
-| Method | Endpoint | Description | Authentication |
-|--------|---------|-------------|----------------|
-| POST   | `/auth/register` | Register a new user | No |
-| POST   | `/auth/login` | Login and get JWT tokens | No |
-| POST   | `/auth/refresh` | Refresh access token | Yes (Refresh) |
-| POST   | `/notes/` | Create a new note | Yes |
-| GET    | `/notes/` | List all user notes | Yes |
-| GET    | `/notes/{id}` | Get a specific note | Yes |
-| PUT    | `/notes/{id}` | Update a note | Yes |
-| DELETE | `/notes/{id}` | Delete a note | Yes |
+| Method | Endpoint            | Description | Authentication |
+|--------|---------------------|-------------|----------------|
+| POST   | `/auth/register/`   | Register a new user | No |
+| POST   | `/auth/login/`      | Login and get JWT tokens | No |
+| POST   | `/auth/refresh/`    | Refresh access token | Yes (Refresh) |
+| POST   | `/notes/`           | Create a new note | Yes |
+| GET    | `/notes/`           | List all user notes | Yes |
+| GET    | `/notes/{id}`       | Get a specific note | Yes |
+| PUT    | `/notes/{id}`       | Update a note | Yes |
+| DELETE | `/notes/{id}`       | Delete a note | Yes |
 | GET    | `/notes/analytics/` | Get notes analytics | Yes |
 
 **Authentication:** Use `Bearer <access_token>` in the `Authorization` header.
