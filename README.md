@@ -51,7 +51,7 @@ The project meets the following test assignment requirements:
 ## Tech Stack
 - **Backend:** Python 3.12, FastAPI, SQLAlchemy, PostgreSQL, NLTK, Pandas
 - **Frontend:** Vue.js 3, Node.js 18
-- **Testing:** pytest, pytest-cov, coverage
+- **Testing:** pytest, coverage
 - **Containerization:** Docker, docker-compose
 - **Database:** PostgreSQL 15
 
