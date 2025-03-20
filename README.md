@@ -158,15 +158,15 @@ The `/notes/analytics/` endpoint provides:
 ```
 
 ## Testing
-### Run Tests Locally:
+
 ```bash
 cd backend
-poetry run pytest --cov=src --cov-report=term-missing tests/
+poetry run pytest -v
+```
+```bash
+cd backend
+poetry run coverage report -m
 ```
 
-### Run Tests in Docker:
-```bash
-docker-compose up --build backend-test
-```
 **Coverage:** Achieved 80% across all modules, with focus on routes, models, and utilities.
 <img width="1170" alt="Image" src="https://github.com/user-attachments/assets/abf68b2c-3bdb-4d70-87a9-35eca134cff3" />
