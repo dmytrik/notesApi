@@ -1,7 +1,7 @@
 <template>
   <div class="note-analytics">
     <template v-if="analytics">
-      <p>Total Word Count: {{ analytics.total_word_count }}</p>
+      <p>Total Word Count: {{ analytics.total_word_count }}</p>н
       <p>Average Note Length: {{ analytics.average_note_length }}</p>
       <p>
         Most Common Words:
